@@ -63,7 +63,6 @@ public class SelectedTimeService {
     public List<TimeRangeWithMember> findOverlappingTimeRanges(
             Room room, LocalDate date) {
 
-        // todo 캐시 작업 필요
         long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
         List<SelectedTime> selectedTimeList = selectedTimeRepository.searchSelectedTimeByRoom(room,
                 date);
