@@ -6,14 +6,17 @@ import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
 import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.SelectedTime;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.repository.SelectedTimeRepository;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -24,7 +27,11 @@ public class SelectedTimeService {
 
     private final EnterRoomRepository enterRoomRepository;
 
+    private static final int MEMBER_MAX_SIZE = 100000;
+
+    // todo 캐시 작업 필요
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
+        long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
         List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
         LocalDate startDay = room.getAvailableStartDay();
         LocalDate endDay = room.getAvailableEndDay();
@@ -41,18 +48,30 @@ public class SelectedTimeService {
         if (!timeRangeWithMembers.isEmpty())
             Collections.sort(timeRangeWithMembers);
 
-        if (timeRangeWithMembers.size() > 10) {
-            return new ArrayList<>(timeRangeWithMembers.subList(0, 10));
+        if (timeRangeWithMembers.size() > MEMBER_MAX_SIZE) {
+            timeRangeWithMembers = new ArrayList<>(timeRangeWithMembers.subList(0, MEMBER_MAX_SIZE));
         }
 
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
+        int sec = (int) (secDiffTime / 1000);
+        int ms = (int) (secDiffTime - sec * 1000);
+        System.out.println("시간차이 : " + sec + "." + ms + "초");
         return timeRangeWithMembers;
     }
 
     public List<TimeRangeWithMember> findOverlappingTimeRanges(
             Room room, LocalDate date) {
 
+        // todo 캐시 작업 필요
+        long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
         List<SelectedTime> selectedTimeList = selectedTimeRepository.searchSelectedTimeByRoom(room,
                 date);
+        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+        long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
+        int sec = (int) (secDiffTime / 1000);
+        int ms = (int) (secDiffTime - sec * 1000);
+        System.out.println("쿼리 시간 : " + sec + "." + ms + "초");
 
         if (selectedTimeList.isEmpty()) {
             return new ArrayList<>();
@@ -87,17 +106,17 @@ public class SelectedTimeService {
 
         Collections.sort(overlappingRanges);
 
-        if (overlappingRanges.size() > 10) {
-            return new ArrayList<>(overlappingRanges.subList(0, 10));
+        if (overlappingRanges.size() > MEMBER_MAX_SIZE) {
+            overlappingRanges = new ArrayList<>(overlappingRanges.subList(0, MEMBER_MAX_SIZE));
         }
 
         return overlappingRanges;
     }
 
     public List<Member> getContainedMember(List<SelectedTime> selectedTimeList,
-                                           LocalTime meetingDuration,
-                                           LocalTime startTime,
-                                           LocalTime endTime) {
+            LocalTime meetingDuration,
+            LocalTime startTime,
+            LocalTime endTime) {
         return selectedTimeList.stream()
                 .filter(selectedTime -> {
                     LocalTime selectedDuration = selectedTime.getDuration();
