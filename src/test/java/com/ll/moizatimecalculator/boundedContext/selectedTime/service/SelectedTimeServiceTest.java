@@ -1,11 +1,13 @@
 package com.ll.moizatimecalculator.boundedContext.selectedTime.service;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import com.ll.moizatimecalculator.boundedContext.member.repository.MemberRepository;
+import com.ll.moizatimecalculator.boundedContext.room.entity.EnterRoom;
 import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
+import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.room.service.RoomService;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,13 +15,19 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
 
-@SpringBootTest()
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
+@EnableCaching
 @ActiveProfiles("test")
 @Transactional
 class SelectedTimeServiceTest {
@@ -30,6 +38,9 @@ class SelectedTimeServiceTest {
     SelectedTimeService selectedTimeService;
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    EnterRoomRepository enterRoomRepository;
 
     static Room room;
     static Member member1;
@@ -126,10 +137,80 @@ class SelectedTimeServiceTest {
     }
 
     @Test
+    @DisplayName("캐싱 및 중간에 값 변경시 캐시 초기화")
     void CacheTest() {
-        Room cacheTestRoom = roomService.getRoom(4L);
-        for (int i = 0; i < 5; i++) {
-            selectedTimeService.findOverlappingTimeRanges(cacheTestRoom);
+        Room room5 = roomService.getRoom(2L);
+
+        int cnt = 15;
+        Member[] members = new Member[cnt];
+        EnterRoom[] enterRooms = new EnterRoom[cnt];
+        for (int k = 0; k < cnt; k++) {
+            members[k] = Member.builder().name(k+"userASDASD"+k).email(k+"sdfesdfasdr@email.com").profile("http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_640x640.jpg").build();
+            try {
+                memberRepository.save(members[k]);
+            } catch (Exception ignored) {
+            }
+
+
+            enterRooms[k] = enterRoomRepository.save(EnterRoom.builder()
+                    .room(room5)
+                    .member(members[k])
+                    .build());
+
+            selectedTimeService.CreateSelectedTime(
+                    LocalDate.now().plusDays(6),
+                    LocalTime.of(7, 0),
+                    LocalTime.of(10, 0),
+                    enterRooms[k]
+            );
+        }
+
+        // 중간에 새로운 값 추가
+        for (int i = 1; i < 6; i++) {
+
+            if (i == 3) {
+                int cnt2 = 15;
+                Member[] members2 = new Member[cnt2];
+                EnterRoom[] enterRooms2 = new EnterRoom[cnt2];
+                for (int k = 0; k < cnt2; k++) {
+                    members2[k] = Member.builder().name(k+"D"+k).email(k+"dr@email.com").profile("http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_640x640.jpg").build();
+                    try {
+                        memberRepository.save(members2[k]);
+                    } catch (Exception ignored) {
+                    }
+
+
+                    enterRooms2[k] = enterRoomRepository.save(EnterRoom.builder()
+                            .room(room5)
+                            .member(members2[k])
+                            .build());
+
+                    selectedTimeService.CreateSelectedTime(
+                            LocalDate.now().plusDays(5),
+                            LocalTime.of(6, 0),
+                            LocalTime.of(9, 0),
+                            enterRooms2[k]
+                    );
+                }
+            }
+
+            long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
+
+            List<TimeRangeWithMember> overlappingTimeRanges = selectedTimeService.findOverlappingTimeRanges(
+                    room5);
+
+            long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+            long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
+            int sec = (int) (secDiffTime / 1000);
+            int ms = (int) (secDiffTime - sec * 1000);
+            System.out.println("All_findOverlappingTimeRanges 시간 : " + sec + "." + ms + "초");
+
+            TimeRangeWithMember tw = overlappingTimeRanges.get(0);
+            System.out.println(tw.date +"::"+ tw.start +"~"+ tw.end);
+            for (Member m : tw.participationMembers) {
+                System.out.print(m.getName() + " ");
+            }
+            System.out.println();
         }
     }
 }

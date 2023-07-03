@@ -15,10 +15,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,22 +33,71 @@ public class SelectedTimeService {
 
     private final EnterRoomRepository enterRoomRepository;
 
-    private static final int MEMBER_MAX_SIZE = 100000;
+    private final CacheManager cacheManager;
 
+    private static final int MEMBER_MAX_SIZE = 10;
+
+    @Transactional
+    public SelectedTime CreateSelectedTime(
+            LocalDate day,
+            LocalTime startTime,
+            LocalTime endTime,
+            EnterRoom enterRoom
+    ) {
+        validDate(enterRoom.getRoom(), day);
+        validTime(enterRoom.getRoom(), startTime, endTime);
+        SelectedTime selectedTime = SelectedTime.builder()
+                .date(day)
+                .startTime(startTime)
+                .endTime(endTime)
+                .enterRoom(enterRoom)
+                .build();
+
+        // 새로운 시간 입력시 캐시 초기화
+        cacheManager.getCache("overlappingTimeRangesCache").clear();
+        return selectedTimeRepository.save(selectedTime);
+    }
+
+    private void validDate(Room room, LocalDate day) {
+        if (room.getAvailableStartDay().isAfter(day)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "선택할 수 있는 날짜가 아닙니다. 선택한 날짜가 가능한 날짜보다 이릅니다.");
+        }
+        if (room.getAvailableEndDay().isBefore(day)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "선택할 수 있는 날짜가 아닙니다. 선택한 날짜가 가능한 날짜보다 늦습니다.");
+        }
+    }
+
+    private void validTime(Room room, LocalTime startTime, LocalTime endTime) {
+        if (startTime.isAfter(endTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "시작하는 시간은 끝나는 시간보다 빠를 수 없습니다.");
+        }
+        if (room.getAvailableStartTime().isAfter(startTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "선택할 수 있는 시간이 아닙니다. 선택한 시간이 가능한 시간보다 이릅니다.");
+        }
+        if (room.getAvailableEndTime().isBefore(endTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "선택할 수 있는 시간이 아닙니다. 선택한 시간이 가능한 시간보다 늦습니다.");
+        }
+        if (endTime.minusHours(startTime.getHour()).minusMinutes(startTime.getMinute())
+                .isBefore(room.getMeetingDuration())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "선택할 수 있는 시간이 아닙니다. 미팅 진행 시간보다 짧은 시간입니다.");
+        }
+    }
+
+    @Cacheable(value = "overlappingTimeRangesCache", key = "#room.id")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
         List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
         LocalDate startDay = room.getAvailableStartDay();
         LocalDate endDay = room.getAvailableEndDay();
 
         while (!startDay.isAfter(endDay)) {
-            long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
             List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room,
                     startDay);
-            long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-            long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
-            int sec = (int) (secDiffTime / 1000);
-            int ms = (int) (secDiffTime - sec * 1000);
-            System.out.println("쿼리 시간 : " + sec + "." + ms + "초");
 
             timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
 
@@ -62,7 +114,6 @@ public class SelectedTimeService {
         return timeRangeWithMembers;
     }
 
-    @Cacheable(value = "overlappingTimeRangesWithRoomAndDate", key = "{ #room.id, #date }")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(
             Room room, LocalDate date) {
 
@@ -80,12 +131,11 @@ public class SelectedTimeService {
 
         LocalTime meetingDuration = room.getMeetingDuration();
 
-        LocalTime basicEndTime = startTime.plusHours(meetingDuration.getHour())
-                .plusMinutes(meetingDuration.getMinute());
-
         while (startTime.isBefore(room.getAvailableEndTime())) {
 
             LocalTime basicStartTime = startTime;
+            LocalTime basicEndTime = startTime.plusHours(meetingDuration.getHour())
+                    .plusMinutes(meetingDuration.getMinute());
 
             List<Member> participationMembers = getContainedMember(selectedTimeList, meetingDuration,
                     basicStartTime,
