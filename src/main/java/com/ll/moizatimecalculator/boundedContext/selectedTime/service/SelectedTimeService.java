@@ -15,12 +15,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@EnableCaching
 public class SelectedTimeService {
 
     private final SelectedTimeRepository selectedTimeRepository;
@@ -29,16 +32,20 @@ public class SelectedTimeService {
 
     private static final int MEMBER_MAX_SIZE = 100000;
 
-    // todo 캐시 작업 필요
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
-        long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
         List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
         LocalDate startDay = room.getAvailableStartDay();
         LocalDate endDay = room.getAvailableEndDay();
 
         while (!startDay.isAfter(endDay)) {
+            long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
             List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room,
                     startDay);
+            long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
+            long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
+            int sec = (int) (secDiffTime / 1000);
+            int ms = (int) (secDiffTime - sec * 1000);
+            System.out.println("쿼리 시간 : " + sec + "." + ms + "초");
 
             timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
 
@@ -52,25 +59,15 @@ public class SelectedTimeService {
             timeRangeWithMembers = new ArrayList<>(timeRangeWithMembers.subList(0, MEMBER_MAX_SIZE));
         }
 
-        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-        long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
-        int sec = (int) (secDiffTime / 1000);
-        int ms = (int) (secDiffTime - sec * 1000);
-        System.out.println("시간차이 : " + sec + "." + ms + "초");
         return timeRangeWithMembers;
     }
 
+    @Cacheable(value = "overlappingTimeRangesWithRoomAndDate", key = "{ #room.id, #date }")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(
             Room room, LocalDate date) {
 
-        long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
         List<SelectedTime> selectedTimeList = selectedTimeRepository.searchSelectedTimeByRoom(room,
                 date);
-        long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-        long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
-        int sec = (int) (secDiffTime / 1000);
-        int ms = (int) (secDiffTime - sec * 1000);
-        System.out.println("쿼리 시간 : " + sec + "." + ms + "초");
 
         if (selectedTimeList.isEmpty()) {
             return new ArrayList<>();
@@ -83,11 +80,12 @@ public class SelectedTimeService {
 
         LocalTime meetingDuration = room.getMeetingDuration();
 
+        LocalTime basicEndTime = startTime.plusHours(meetingDuration.getHour())
+                .plusMinutes(meetingDuration.getMinute());
+
         while (startTime.isBefore(room.getAvailableEndTime())) {
 
             LocalTime basicStartTime = startTime;
-            LocalTime basicEndTime = startTime.plusHours(meetingDuration.getHour())
-                    .plusMinutes(meetingDuration.getMinute());
 
             List<Member> participationMembers = getContainedMember(selectedTimeList, meetingDuration,
                     basicStartTime,
