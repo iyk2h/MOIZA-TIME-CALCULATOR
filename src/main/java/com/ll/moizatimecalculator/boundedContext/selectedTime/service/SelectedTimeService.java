@@ -36,6 +36,8 @@ public class SelectedTimeService {
     private final CacheManager cacheManager;
 
     private static final int MEMBER_MAX_SIZE = 10;
+    private static final int MIN_PARTICIPATION_MEMBER = 1;
+    private static final int THIRTY_MIN = 30;
 
     @Transactional
     public SelectedTime CreateSelectedTime(
@@ -92,16 +94,11 @@ public class SelectedTimeService {
     @Cacheable(value = "overlappingTimeRangesCache", key = "#room.id")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
         List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
-        LocalDate startDay = room.getAvailableStartDay();
-        LocalDate endDay = room.getAvailableEndDay();
 
-        while (!startDay.isAfter(endDay)) {
-            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room,
-                    startDay);
+        for (LocalDate curDate : room.getAvailableDayList()) {
+            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room, curDate);
 
             timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
-
-            startDay = startDay.plusDays(1);
         }
 
         if (!timeRangeWithMembers.isEmpty())
@@ -143,12 +140,12 @@ public class SelectedTimeService {
 
             List<Member> nonParticipationMembers = getNonParticipationMembers(room, participationMembers);
 
-            if (participationMembers.size() >= 1) {
+            if (participationMembers.size() >= MIN_PARTICIPATION_MEMBER) {
                 overlappingRanges.add(
                         new TimeRangeWithMember(date, basicStartTime, basicEndTime, participationMembers, nonParticipationMembers));
             }
 
-            startTime = basicStartTime.plusMinutes(30);
+            startTime = basicStartTime.plusMinutes(THIRTY_MIN);
         }
 
         Collections.sort(overlappingRanges);
@@ -165,20 +162,26 @@ public class SelectedTimeService {
             LocalTime startTime,
             LocalTime endTime) {
         return selectedTimeList.stream()
-                .filter(selectedTime -> {
-                    LocalTime selectedDuration = selectedTime.getDuration();
-                    return isAfterOrEqual(selectedDuration, meetingDuration);
-                })
+                .filter(selectedTime -> isAfterOrEqual(selectedTime.getDuration(), meetingDuration))
                 .filter(selectedTime -> isBeforeOrEqual(selectedTime.getStartTime(), endTime))
-                .filter(selectedTime ->
-                        isBeforeOrEqual(selectedTime.getStartTime(), startTime)
-                                && isAfterOrEqual(selectedTime.getEndTime(),endTime)
-                )
+                .filter(selectedTime -> isWithinTimeRange(selectedTime, startTime, endTime))
                 .map(SelectedTime::getEnterRoom)
                 .map(EnterRoom::getMember)
                 .distinct()
                 .sorted(Comparator.comparing(Member::getName))
                 .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public List<Member> getNonParticipationMembers(Room room, List<Member> participationMembers) {
+        List<Member> allMembers = enterRoomRepository.findMembersByRoom(room);
+
+        return allMembers.stream()
+                .filter(m -> !participationMembers.contains(m))
+                .collect(Collectors.toList());
+    }
+
+    private boolean isWithinTimeRange(SelectedTime selectedTime, LocalTime startTime, LocalTime endTime) {
+        return isBeforeOrEqual(selectedTime.getStartTime(), startTime) && isAfterOrEqual(selectedTime.getEndTime(), endTime);
     }
 
     private boolean isAfterOrEqual(LocalTime left, LocalTime right) {
@@ -189,13 +192,5 @@ public class SelectedTimeService {
     private boolean isBeforeOrEqual(LocalTime left, LocalTime right) {
         // left <= right
         return !left.isAfter(right);
-    }
-
-    public List<Member> getNonParticipationMembers(Room room, List<Member> participationMembers) {
-        List<Member> allMembers = enterRoomRepository.findMembersByRoom(room);
-
-        return allMembers.stream()
-                .filter(m -> !participationMembers.contains(m))
-                .collect(Collectors.toList());
     }
 }
