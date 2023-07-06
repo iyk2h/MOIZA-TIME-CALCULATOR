@@ -141,57 +141,11 @@ class SelectedTimeServiceTest {
     void CacheTest() {
         Room room5 = roomService.getRoom(2L);
 
-        int cnt = 15;
-        Member[] members = new Member[cnt];
-        EnterRoom[] enterRooms = new EnterRoom[cnt];
-        for (int k = 0; k < cnt; k++) {
-            members[k] = Member.builder().name(k+"userASDASD"+k).email(k+"sdfesdfasdr@email.com").profile("http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_640x640.jpg").build();
-            try {
-                memberRepository.save(members[k]);
-            } catch (Exception ignored) {
-            }
-
-
-            enterRooms[k] = enterRoomRepository.save(EnterRoom.builder()
-                    .room(room5)
-                    .member(members[k])
-                    .build());
-
-            selectedTimeService.CreateSelectedTime(
-                    LocalDate.now().plusDays(6),
-                    LocalTime.of(7, 0),
-                    LocalTime.of(10, 0),
-                    enterRooms[k]
-            );
-        }
-
         // 중간에 새로운 값 추가
         for (int i = 1; i < 6; i++) {
 
             if (i == 3) {
-                int cnt2 = 15;
-                Member[] members2 = new Member[cnt2];
-                EnterRoom[] enterRooms2 = new EnterRoom[cnt2];
-                for (int k = 0; k < cnt2; k++) {
-                    members2[k] = Member.builder().name(k+"D"+k).email(k+"dr@email.com").profile("http://k.kakaocdn.net/dn/dpk9l1/btqmGhA2lKL/Oz0wDuJn1YV2DIn92f6DVK/img_640x640.jpg").build();
-                    try {
-                        memberRepository.save(members2[k]);
-                    } catch (Exception ignored) {
-                    }
-
-
-                    enterRooms2[k] = enterRoomRepository.save(EnterRoom.builder()
-                            .room(room5)
-                            .member(members2[k])
-                            .build());
-
-                    selectedTimeService.CreateSelectedTime(
-                            LocalDate.now().plusDays(5),
-                            LocalTime.of(6, 0),
-                            LocalTime.of(9, 0),
-                            enterRooms2[k]
-                    );
-                }
+                selectedTimeService.refreshCache();
             }
 
             long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
@@ -216,10 +170,9 @@ class SelectedTimeServiceTest {
 
     @Test
     void roomGetAvailableDayList() {
-        Room room5 = roomService.getRoom(5L);
+        Room room5 = roomService.getRoom(2L);
         for (LocalDate cur : room5.getAvailableDayList()) {
             System.out.println(cur);
         }
-
     }
 }

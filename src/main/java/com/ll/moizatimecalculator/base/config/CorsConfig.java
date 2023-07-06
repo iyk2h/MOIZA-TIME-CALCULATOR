@@ -17,7 +17,7 @@ public class CorsConfig {
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration().applyPermitDefaultValues();
-        config.setAllowedOrigins(Arrays.asList("http://localhost:8080")); // 프론트엔드 포트에 맞게 수정
+        config.setAllowedOrigins(Arrays.asList("http://localhost:8080","https://moiza.online"));
         config.setAllowedMethods(Arrays.asList("GET","POST","OPTIONS")); // OPTIONS 메소드 추가
         config.setAllowedHeaders(Arrays.asList("*")); // 모든 헤더 허용
         source.registerCorsConfiguration("/**", config);
