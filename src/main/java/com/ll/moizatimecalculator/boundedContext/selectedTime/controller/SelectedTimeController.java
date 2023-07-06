@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,5 +24,14 @@ public class SelectedTimeController {
     public List<TimeRangeWithMember> overlappingTimes(@PathVariable Long roomId){
         Room room = roomService.getRoom(roomId);
         return selectedTimeService.findOverlappingTimeRanges(room);
+    }
+
+    // roomId에 대한 캐시를 초기화
+    @GetMapping("/refresh-cache/{roomId}")
+    public Map<String, String> refresh(@PathVariable Long roomId) {
+        Room room = roomService.getRoom(roomId);
+        selectedTimeService.refreshCache(room);
+
+        return Map.of("msg", "%d번 방의 모임시간 캐시 초기화 성공".formatted(roomId));
     }
 }
