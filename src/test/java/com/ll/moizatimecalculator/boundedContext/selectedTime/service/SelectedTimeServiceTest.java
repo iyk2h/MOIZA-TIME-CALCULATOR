@@ -145,7 +145,7 @@ class SelectedTimeServiceTest {
         for (int i = 1; i < 6; i++) {
 
             if (i == 3) {
-                selectedTimeService.refreshCache();
+                selectedTimeService.refreshCache(room5);
             }
 
             long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
