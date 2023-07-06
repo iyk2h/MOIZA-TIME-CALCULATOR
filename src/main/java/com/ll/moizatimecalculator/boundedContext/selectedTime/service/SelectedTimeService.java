@@ -102,7 +102,7 @@ public class SelectedTimeService {
         return overlappingRanges;
     }
 
-    public List<Member> getContainedMember(List<SelectedTime> selectedTimeList,
+    private List<Member> getContainedMember(List<SelectedTime> selectedTimeList,
             LocalTime meetingDuration,
             LocalTime startTime,
             LocalTime endTime) {
@@ -117,7 +117,7 @@ public class SelectedTimeService {
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    public List<Member> getNonParticipationMembers(Room room, List<Member> participationMembers) {
+    private List<Member> getNonParticipationMembers(Room room, List<Member> participationMembers) {
         List<Member> allMembers = enterRoomRepository.findMembersByRoom(room);
 
         return allMembers.stream()
