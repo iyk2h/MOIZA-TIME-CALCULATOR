@@ -73,24 +73,23 @@ public class SelectedTimeService {
 
         LocalTime meetingDuration = room.getMeetingDuration();
 
-        while (startTime.isBefore(room.getAvailableEndTime())) {
+        LocalTime endTime = startTime.plusHours(meetingDuration.getHour())
+                .plusMinutes(meetingDuration.getMinute());
 
-            LocalTime basicStartTime = startTime;
-            LocalTime basicEndTime = startTime.plusHours(meetingDuration.getHour())
-                    .plusMinutes(meetingDuration.getMinute());
-
+        while (endTime.isBefore(room.getAvailableEndTime())) {
             List<Member> participationMembers = getContainedMember(selectedTimeList, meetingDuration,
-                    basicStartTime,
-                    basicEndTime);
+                    startTime, endTime);
 
             List<Member> nonParticipationMembers = getNonParticipationMembers(room, participationMembers);
 
             if (participationMembers.size() >= MIN_PARTICIPATION_MEMBER) {
                 overlappingRanges.add(
-                        new TimeRangeWithMember(date, basicStartTime, basicEndTime, participationMembers, nonParticipationMembers));
+                        new TimeRangeWithMember(date, startTime, endTime, participationMembers, nonParticipationMembers));
             }
 
-            startTime = basicStartTime.plusMinutes(THIRTY_MIN);
+            startTime = startTime.plusMinutes(THIRTY_MIN);
+            endTime = startTime.plusHours(meetingDuration.getHour()).plusMinutes(
+                    meetingDuration.getMinute());
         }
 
         Collections.sort(overlappingRanges);
