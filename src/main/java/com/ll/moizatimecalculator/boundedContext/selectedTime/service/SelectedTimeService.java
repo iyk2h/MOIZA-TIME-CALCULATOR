@@ -6,7 +6,6 @@ import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
 import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.SelectedTime;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.repository.SelectedTimeRepository;
-import java.time.chrono.ChronoLocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,15 +30,19 @@ public class SelectedTimeService {
     private static final int MEMBER_MAX_SIZE = 10;
     private static final int MIN_PARTICIPATION_MEMBER = 1;
     private static final int THIRTY_MIN = 30;
+    private static final int ONE_DAY = 1;
 
     @Cacheable(value = "overlappingTimeRangesCache", key = "#room.id")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
         List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
 
-        for (LocalDate curDate : room.getAvailableDayList()) {
-            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room, curDate);
+        LocalDate curDate = room.getAvailableStartDay();
 
+        while (!curDate.isAfter(room.getAvailableEndDay())) {
+            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room, curDate);
             timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
+
+            curDate = curDate.plusDays(ONE_DAY);
         }
 
         if (!timeRangeWithMembers.isEmpty())
