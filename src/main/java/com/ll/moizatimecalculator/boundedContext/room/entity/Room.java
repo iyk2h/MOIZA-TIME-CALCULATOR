@@ -19,7 +19,6 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 @ToString(callSuper = true)
-@EqualsAndHashCode
 public class Room extends BaseEntity {
     private String name;
     private String description;

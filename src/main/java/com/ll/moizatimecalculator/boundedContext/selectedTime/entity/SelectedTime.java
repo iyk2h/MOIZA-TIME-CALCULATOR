@@ -29,4 +29,11 @@ public class SelectedTime extends BaseEntity {
                 .minusHours(getStartTime().getHour())
                 .minusMinutes(getStartTime().getMinute());
     }
+
+    public boolean isParticipation(LocalTime meetingDuration, LocalTime startTime, LocalTime endTime) {
+        return !this.getDuration().isBefore(meetingDuration)
+                && !this.startTime.isAfter(endTime)
+                && !this.startTime.isAfter(startTime)
+                && !this.endTime.isBefore(endTime);
+    }
 }
