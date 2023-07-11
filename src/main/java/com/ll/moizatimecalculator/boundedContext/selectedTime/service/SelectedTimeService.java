@@ -6,6 +6,7 @@ import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
 import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.SelectedTime;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.repository.SelectedTimeRepository;
+import java.time.chrono.ChronoLocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -68,7 +69,6 @@ public class SelectedTimeService {
 
         List<TimeRangeWithMember> overlappingRanges = new LinkedList<>();
 
-        // 탐색 시간 기준 시작점
         LocalTime startTime = room.getAvailableStartTime();
 
         LocalTime meetingDuration = room.getMeetingDuration();
@@ -77,7 +77,7 @@ public class SelectedTimeService {
                 .plusMinutes(meetingDuration.getMinute());
 
         while (endTime.isBefore(room.getAvailableEndTime())) {
-            List<Member> participationMembers = getContainedMember(selectedTimeList, meetingDuration,
+            List<Member> participationMembers = getParticipationMembers(selectedTimeList, meetingDuration,
                     startTime, endTime);
 
             List<Member> nonParticipationMembers = getNonParticipationMembers(room, participationMembers);
@@ -101,14 +101,12 @@ public class SelectedTimeService {
         return overlappingRanges;
     }
 
-    private List<Member> getContainedMember(List<SelectedTime> selectedTimeList,
+    private List<Member> getParticipationMembers(List<SelectedTime> selectedTimeList,
             LocalTime meetingDuration,
             LocalTime startTime,
             LocalTime endTime) {
         return selectedTimeList.stream()
-                .filter(selectedTime -> isAfterOrEqual(selectedTime.getDuration(), meetingDuration))
-                .filter(selectedTime -> isBeforeOrEqual(selectedTime.getStartTime(), endTime))
-                .filter(selectedTime -> isWithinTimeRange(selectedTime, startTime, endTime))
+                .filter(selectedTime -> selectedTime.isParticipation(meetingDuration, startTime, endTime))
                 .map(SelectedTime::getEnterRoom)
                 .map(EnterRoom::getMember)
                 .distinct()
@@ -122,19 +120,5 @@ public class SelectedTimeService {
         return allMembers.stream()
                 .filter(m -> !participationMembers.contains(m))
                 .collect(Collectors.toList());
-    }
-
-    private boolean isWithinTimeRange(SelectedTime selectedTime, LocalTime startTime, LocalTime endTime) {
-        return isBeforeOrEqual(selectedTime.getStartTime(), startTime) && isAfterOrEqual(selectedTime.getEndTime(), endTime);
-    }
-
-    private boolean isAfterOrEqual(LocalTime left, LocalTime right) {
-        // left >= right
-        return !left.isBefore(right);
-    }
-
-    private boolean isBeforeOrEqual(LocalTime left, LocalTime right) {
-        // left <= right
-        return !left.isAfter(right);
     }
 }
