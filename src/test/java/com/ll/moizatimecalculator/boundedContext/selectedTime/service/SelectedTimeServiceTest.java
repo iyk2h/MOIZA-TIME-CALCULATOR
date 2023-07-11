@@ -167,12 +167,4 @@ class SelectedTimeServiceTest {
             System.out.println();
         }
     }
-
-    @Test
-    void roomGetAvailableDayList() {
-        Room room5 = roomService.getRoom(2L);
-        for (LocalDate cur : room5.getAvailableDayList()) {
-            System.out.println(cur);
-        }
-    }
 }

@@ -3,8 +3,6 @@ package com.ll.moizatimecalculator.boundedContext.room.entity;
 import com.ll.moizatimecalculator.base.entity.BaseEntity;
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import jakarta.persistence.*;
-import java.util.Collections;
-import java.util.LinkedList;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -42,17 +40,4 @@ public class Room extends BaseEntity {
     @JoinColumn(name = "leaderId")
     private Member leader;
 
-    public List<LocalDate> getAvailableDayList() {
-        LocalDate startDay = availableStartDay;
-        LocalDate endDay = availableEndDay;
-
-        List<LocalDate> availableDayList = new LinkedList<>();
-
-        while (!startDay.isAfter(endDay)) {
-            availableDayList.add(startDay);
-            startDay = startDay.plusDays(1);
-        }
-
-        return availableDayList;
-    }
 }
