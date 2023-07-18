@@ -9,9 +9,10 @@
 
 캐시를 적용해 반복적인 계산을 줄여 후속 요청에 대한 응답 시간을 개선했습니다.
 
-<img width="942" alt="image" src="https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/assets/17765939/ab448e27-2b4c-4a51-ae7d-833dbb11252a">
+[MOIZA 서비스](https://github.com/llBackend7/MOIZA) 서버에서 [계산 프로세스 분리 과정 Wiki 보기](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/wiki/%EA%B2%B9%EC%B9%98%EB%8A%94-%EC%8B%9C%EA%B0%84-TOP10-%EA%B3%84%EC%82%B0-%ED%94%84%EB%A1%9C%EC%84%B8%EC%8A%A4-%EB%B6%84%EB%A6%AC-%EA%B3%BC%EC%A0%95)
 
-[MOIZA 서비스](https://github.com/llBackend7/MOIZA) 서버에서 [프로세스 분리 과정 Wiki 보기](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/wiki/%EA%B2%B9%EC%B9%98%EB%8A%94-%EC%8B%9C%EA%B0%84-TOP10-%EA%B3%84%EC%82%B0-%ED%94%84%EB%A1%9C%EC%84%B8%EC%8A%A4-%EB%B6%84%EB%A6%AC-%EA%B3%BC%EC%A0%95)
+
+<img width="942" alt="image" src="https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/assets/17765939/ab448e27-2b4c-4a51-ae7d-833dbb11252a">
 
 ---
 
