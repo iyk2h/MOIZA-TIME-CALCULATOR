@@ -1,7 +1,7 @@
 # MOIZA-TIME-CALCULATOR
 
 ## 📌서비스의 핵심 기능
-모이자 서비스에서 제공하는 모임 내에서 모임원들이 입력한 시간 중 최대로 겹치는 시간대 계산해줍니다.
+모이자 서비스에서 제공하는 모임 내에서 모임원들이 입력한 시간 중 최대로 겹치는 시간대를 계산해줍니다.
 
 <img width="942" alt="image" src="https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/assets/17765939/ab448e27-2b4c-4a51-ae7d-833dbb11252a">
 
