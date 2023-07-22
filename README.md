@@ -20,13 +20,11 @@
 
 ### 사용자 간 겹치는 시간대 식별
 
-<img width="854" alt="image" src="https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/assets/17765939/14c5bc93-5081-426e-8d15-5bd55253cb64">
+<img width="1560" alt="image" src="https://github.com/llBackend7/MOIZA-TIME-CALCULATOR/assets/17765939/04ee16d6-2949-4994-a951-e486c02f1175">
 
-[코드](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/blob/782f82a738f142b3e7f0143939d1c29b9b0c723f/src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/service/SelectedTimeService.java#L36)
+[findOverlappingTimeRanges(Room) 코드](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/blob/782f82a738f142b3e7f0143939d1c29b9b0c723f/src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/service/SelectedTimeService.java#L36)
 
-<img width="1079" alt="image" src="https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/assets/17765939/a1e0bbd3-f13c-46f6-ad20-0234cb3f8989">
-
-[코드](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/blob/782f82a738f142b3e7f0143939d1c29b9b0c723f/src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/service/SelectedTimeService.java#L63)
+[findOverlappingTimeRanges(Room, Date) 코드](https://github.com/iyk2h/MOIZA-TIME-CALCULATOR/blob/782f82a738f142b3e7f0143939d1c29b9b0c723f/src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/service/SelectedTimeService.java#L63)
 
 ## ⚙️개발 환경 및 기술 스택
 Back-end
