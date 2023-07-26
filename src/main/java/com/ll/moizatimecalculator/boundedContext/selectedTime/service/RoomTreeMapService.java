@@ -32,7 +32,7 @@ public class RoomTreeMapService {
         return roomDataMap.computeIfAbsent(roomId, key -> new RoomTreeMap());
     }
 
-    public synchronized void setRoomTreeMap(Long roomId, LocalDate localDate, LocalTime localTime,
+    public void setRoomTreeMap(Long roomId, LocalDate localDate, LocalTime localTime,
             Member member) {
         LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
 
@@ -40,7 +40,7 @@ public class RoomTreeMapService {
         roomTreeMap.setRoomTreeMapDateWithMember(localDateTime, member);
     }
 
-    public synchronized List<TimeRangeWithMember> findOverlappingTimeRanges(Long roomId) {
+    public List<TimeRangeWithMember> findOverlappingTimeRanges(Long roomId) {
         RoomTreeMap roomTreeMap = getRoomTreeMap(roomId);
 
         List<Entry<LocalDateTime, TreeSet<Member>>> entries = getSortedEntries(roomTreeMap);
