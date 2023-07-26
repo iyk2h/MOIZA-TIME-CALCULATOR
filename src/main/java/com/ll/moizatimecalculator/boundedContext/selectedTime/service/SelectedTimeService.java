@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -75,30 +74,8 @@ public class SelectedTimeService {
         }
     }
 
-    @Cacheable(value = "overlappingTimeRangesCache", key = "#room.id")
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
-        List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
-
-        LocalDate curDate = room.getAvailableStartDay();
-
-        while (!curDate.isAfter(room.getAvailableEndDay())) {
-            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room,
-                    curDate);
-            timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
-
-            curDate = curDate.plusDays(ONE_DAY);
-        }
-
-        if (!timeRangeWithMembers.isEmpty()) {
-            Collections.sort(timeRangeWithMembers);
-        }
-
-        if (timeRangeWithMembers.size() > MEMBER_MAX_SIZE) {
-            timeRangeWithMembers = new ArrayList<>(
-                    timeRangeWithMembers.subList(0, MEMBER_MAX_SIZE));
-        }
-
-        return timeRangeWithMembers;
+        return roomTreeMapService.findOverlappingTimeRanges(room.getId());
     }
 
     @CacheEvict(value = "overlappingTimeRangesCache", key = "#room.id")

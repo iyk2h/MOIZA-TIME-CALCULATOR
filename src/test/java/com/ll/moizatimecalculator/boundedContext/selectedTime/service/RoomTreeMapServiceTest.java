@@ -83,6 +83,25 @@ class RoomTreeMapServiceTest {
             }
             System.out.println();
         }
+
+        roomTreeMapService.delete(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
+
+        List<TimeRangeWithMember> overlappingRanges2 = roomTreeMapService.findOverlappingTimeRanges(
+                roomId);
+
+        for (TimeRangeWithMember t : overlappingRanges2) {
+            System.out.println(t.date + " | " + t.start + "~" + t.end);
+            System.out.print("참가자 : ");
+            for (Member m : t.getParticipationMembers()) {
+                System.out.print(m.getName() + " ");
+            }
+            System.out.println();
+            System.out.print("불참자 : ");
+            for (Member m : t.getNonParticipationMembers()) {
+                System.out.print(m.getName() + " ");
+            }
+            System.out.println();
+        }
     }
 
     @BeforeEach
