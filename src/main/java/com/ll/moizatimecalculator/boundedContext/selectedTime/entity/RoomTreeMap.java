@@ -18,4 +18,13 @@ public class RoomTreeMap {
         members.add(member);
         roomTreeMap.put(localDateTime, members);
     }
+
+    public synchronized void deleteTreeMap(LocalDateTime localDateTime, Member member) {
+        TreeSet<Member> members = roomTreeMap.getOrDefault(localDateTime, new TreeSet<>());
+        members.remove(member);
+        roomTreeMap.put(localDateTime, members);
+        if (members.isEmpty()) {
+            roomTreeMap.remove(localDateTime);
+        }
+    }
 }
