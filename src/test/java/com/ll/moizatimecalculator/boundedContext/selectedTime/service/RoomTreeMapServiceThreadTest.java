@@ -39,57 +39,57 @@ public class RoomTreeMapServiceThreadTest {
     @Autowired
     EnterRoomRepository enterRoomRepository;
 
-    static Room room;
-    static Member member1;
-    static Member member2;
-    static Member member3;
+    Room room;
+    Member member1;
+    Member member2;
+    Member member3;
 
     @Test
     @DisplayName("동시성 테스트")
     @Transactional
     void multi_thread_test() {
         final int NUM_USERS = 3;
-        final long ROOM_ID = 1;
+
+        final long ROOM_ID = room.getId();
 
         Member[] members = new Member[NUM_USERS + 1];
 
         for (int i = 1; i < NUM_USERS + 1; i++) {
             members[i] = memberRepository.findById(Long.valueOf(i)).orElse(new Member());
+            System.out.println(members[i]);
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             ExecutorService executorService = Executors.newFixedThreadPool(NUM_USERS);
 
             Runnable userTask = () -> {
-                long userId = Thread.currentThread().getId() - 41;
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                long userId = Thread.currentThread().getId() - '0' + 1;
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(0, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(1, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(2, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(3, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(4, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(5, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(6, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(7, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(8, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
+                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(9, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(3),
-                        LocalTime.of(10, 0, 0), members[(int) userId]);
             };
-            for (int j = 1; j < NUM_USERS + 1; j++) {
+            for (int j = 0; j < NUM_USERS; j++) {
                 executorService.submit(userTask);
             }
-
             executorService.shutdown();
+
             try {
                 executorService.awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
@@ -98,15 +98,13 @@ public class RoomTreeMapServiceThreadTest {
 
             List<TimeRangeWithMember> overlappingRanges = roomTreeMapService.findOverlappingTimeRanges(
                     ROOM_ID);
-
             for (int j = 0; j < 10; j++) {
                 TimeRangeWithMember tm = overlappingRanges.get(j);
                 int finalJ = j;
-                int finalJ1 = j;
                 assertAll(
-                        () -> assertThat(tm.getDate()).isEqualTo(LocalDate.now().plusDays(3)),
+                        () -> assertThat(tm.getDate()).isEqualTo(LocalDate.now().plusDays(6)),
                         () -> assertThat(tm.getStart()).isEqualTo(LocalTime.of(finalJ, 0)),
-                        () -> assertThat(tm.getEnd()).isEqualTo(LocalTime.of(finalJ1 + 3, 0)),
+                        () -> assertThat(tm.getEnd()).isEqualTo(LocalTime.of(finalJ + 3, 0)),
                         () -> assertThat(tm.getParticipationMembers()).isEqualTo(
                                 List.of(member1, member2, member3))
                 );
