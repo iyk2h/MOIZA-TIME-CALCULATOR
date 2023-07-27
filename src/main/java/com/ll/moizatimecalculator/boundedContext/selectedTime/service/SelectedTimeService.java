@@ -6,18 +6,20 @@ import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
 import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.SelectedTime;
 import com.ll.moizatimecalculator.boundedContext.selectedTime.repository.SelectedTimeRepository;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -29,6 +31,9 @@ public class SelectedTimeService {
     private final SelectedTimeRepository selectedTimeRepository;
 
     private final EnterRoomRepository enterRoomRepository;
+
+    private final RoomTreeMapService roomTreeMapService;
+
     private static final int MEMBER_MAX_SIZE = 10;
     private static final int MIN_PARTICIPATION_MEMBER = 1;
     private static final int THIRTY_MIN = 30;
@@ -47,36 +52,34 @@ public class SelectedTimeService {
                 .endTime(endTime)
                 .enterRoom(enterRoom)
                 .build();
+        setRoomTreeMap(day, startTime, endTime, enterRoom);
 
         enterRoom.getSelectedTimes().add(selectedTime);
         return selectedTimeRepository.save(selectedTime);
     }
 
-    @Cacheable(value = "overlappingTimeRangesCache", key = "#room.id")
+    private void setRoomTreeMap(LocalDate day,
+            LocalTime startTime,
+            LocalTime endTime,
+            EnterRoom enterRoom) {
+        LocalTime meetingDuration = enterRoom.getRoom().getMeetingDuration();
+        LocalTime curTime = startTime.plusHours(meetingDuration.getHour())
+                .plusMinutes(meetingDuration.getMinute());
+
+        while (!curTime.isAfter(endTime)) {
+            roomTreeMapService.setRoomTreeMap(enterRoom.getRoom().getId(), day, startTime,
+                    enterRoom.getMember());
+            curTime = curTime.plusMinutes(30);
+            startTime = startTime.plusMinutes(30);
+        }
+    }
+
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
-        List<TimeRangeWithMember> timeRangeWithMembers = new LinkedList<>();
-
-        LocalDate curDate = room.getAvailableStartDay();
-
-        while (!curDate.isAfter(room.getAvailableEndDay())) {
-            List<TimeRangeWithMember> getTimeRangesWhitRoomAndDay = findOverlappingTimeRanges(room, curDate);
-            timeRangeWithMembers.addAll(getTimeRangesWhitRoomAndDay);
-
-            curDate = curDate.plusDays(ONE_DAY);
-        }
-
-        if (!timeRangeWithMembers.isEmpty())
-            Collections.sort(timeRangeWithMembers);
-
-        if (timeRangeWithMembers.size() > MEMBER_MAX_SIZE) {
-            timeRangeWithMembers = new ArrayList<>(timeRangeWithMembers.subList(0, MEMBER_MAX_SIZE));
-        }
-
-        return timeRangeWithMembers;
+        return roomTreeMapService.findOverlappingTimeRanges(room.getId());
     }
 
     @CacheEvict(value = "overlappingTimeRangesCache", key = "#room.id")
-    public void refreshCache(Room room){
+    public void refreshCache(Room room) {
         // 캐시 지우기 위한 메서드
     }
 
@@ -100,14 +103,17 @@ public class SelectedTimeService {
                 .plusMinutes(meetingDuration.getMinute());
 
         while (endTime.isBefore(room.getAvailableEndTime())) {
-            List<Member> participationMembers = getParticipationMembers(selectedTimeList, meetingDuration,
+            List<Member> participationMembers = getParticipationMembers(selectedTimeList,
+                    meetingDuration,
                     startTime, endTime);
 
-            List<Member> nonParticipationMembers = getNonParticipationMembers(room, participationMembers);
+            List<Member> nonParticipationMembers = getNonParticipationMembers(room,
+                    participationMembers);
 
             if (participationMembers.size() >= MIN_PARTICIPATION_MEMBER) {
                 overlappingRanges.add(
-                        new TimeRangeWithMember(date, startTime, endTime, participationMembers, nonParticipationMembers));
+                        new TimeRangeWithMember(date, startTime, endTime, participationMembers,
+                                nonParticipationMembers));
             }
 
             startTime = startTime.plusMinutes(THIRTY_MIN);
@@ -129,7 +135,8 @@ public class SelectedTimeService {
             LocalTime startTime,
             LocalTime endTime) {
         return selectedTimeList.stream()
-                .filter(selectedTime -> selectedTime.isParticipation(meetingDuration, startTime, endTime))
+                .filter(selectedTime -> selectedTime.isParticipation(meetingDuration, startTime,
+                        endTime))
                 .map(SelectedTime::getEnterRoom)
                 .map(EnterRoom::getMember)
                 .distinct()

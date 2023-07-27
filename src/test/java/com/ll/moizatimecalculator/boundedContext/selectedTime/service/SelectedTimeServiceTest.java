@@ -49,6 +49,7 @@ class SelectedTimeServiceTest {
 
     @Test
     @DisplayName("현재 + 6일의 _ 겹치는_시간_조회")
+    @Transactional
     void findOverlappingTimeRanges_test() {
 
         List<TimeRangeWithMember> overlappingRanges = selectedTimeService.findOverlappingTimeRanges(
@@ -114,6 +115,7 @@ class SelectedTimeServiceTest {
 
     @Test
     @DisplayName("모임전체_겹치는_시간_조회")
+    @Transactional
     void all_findOverlappingTimeRanges_test() {
 
         List<TimeRangeWithMember> overlappingRanges = selectedTimeService.findOverlappingTimeRanges(
@@ -169,60 +171,6 @@ class SelectedTimeServiceTest {
                 () -> assertThat(t5.getParticipationMembers()).isEqualTo(List.of(member1, member2)),
                 () -> assertThat(t5.getNonParticipationMembers()).isEqualTo(List.of(member3))
                 // 불참자
-        );
-
-    }
-
-    @Test
-    @DisplayName("캐싱 및 중간에 값 변경시 캐시 초기화")
-    void CacheTest() {
-        int firstSecDiffTime = 0;
-        int secondSecDiffTime = 0;
-        int afterCleanCache = 0;
-
-        // 중간에 새로운 값 추가
-        for (int i = 1; i < 6; i++) {
-
-            if (i == 3) {
-                selectedTimeService.refreshCache(room);
-            }
-
-            long beforeTime = System.currentTimeMillis(); // 코드 실행 시작 시간 받아오기
-
-            List<TimeRangeWithMember> overlappingTimeRanges = selectedTimeService.findOverlappingTimeRanges(
-                    room);
-
-            long afterTime = System.currentTimeMillis(); // 코드 실행 후에 시간 받아오기
-            long secDiffTime = (afterTime - beforeTime); //두 시간에 차 계산
-            int sec = (int) (secDiffTime / 1000);
-            int ms = (int) (secDiffTime - sec * 1000);
-            System.out.println("All_findOverlappingTimeRanges 시간 : " + sec + "." + ms + "초");
-
-            TimeRangeWithMember tw = overlappingTimeRanges.get(0);
-            System.out.println(tw.date + "::" + tw.start + "~" + tw.end);
-            for (Member m : tw.participationMembers) {
-                System.out.print(m.getName() + " ");
-            }
-            System.out.println();
-
-            switch (i) {
-                case 1 -> firstSecDiffTime = sec * 1000 + ms;
-                case 2 -> secondSecDiffTime = sec * 1000 + ms;
-                case 3 -> afterCleanCache = sec * 1000 + ms;
-                default -> {
-                }
-            }
-        }
-
-        final int finalFirstSecDiffTime = firstSecDiffTime;
-        final int finalSecondSecDiffTime = secondSecDiffTime;
-        final int finalAfterCleanCache = afterCleanCache;
-
-        assertAll(
-                () -> assertThat(
-                        Long.compare(finalFirstSecDiffTime, finalSecondSecDiffTime)).isEqualTo(1),
-                () -> assertThat(
-                        Long.compare(finalSecondSecDiffTime, finalAfterCleanCache)).isEqualTo(-1)
         );
 
     }
