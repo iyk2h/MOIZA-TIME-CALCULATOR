@@ -1,5 +1,8 @@
 package com.ll.moizatimecalculator.boundedContext.selectedTime.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import com.ll.moizatimecalculator.boundedContext.member.repository.MemberRepository;
 import com.ll.moizatimecalculator.boundedContext.room.entity.EnterRoom;
@@ -10,26 +13,25 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@EnableCaching
 @ActiveProfiles("test")
 @Transactional
-class RoomTreeMapServiceTest {
+public class CalculatorServiceThreadTest {
 
     @Autowired
-    RoomTreeMapService roomTreeMapService;
+    CalculatorService calculatorService;
     @Autowired
     RoomRepository roomRepository;
     @Autowired
@@ -43,53 +45,76 @@ class RoomTreeMapServiceTest {
     Member member3;
 
     @Test
-    @DisplayName("삽입 및 삭제 테스트")
+    @DisplayName("동시성 테스트")
     @Transactional
-    void RoomTreeMapServiceTest() {
+    void multi_thread_test() {
+        final int NUM_USERS = 3;
 
-        long roomId = room.getId();
+        final long ROOM_ID = room.getId();
 
-        ConcurrentHashMap<LocalDateTime, Set<Member>> treeMap = roomTreeMapService.getRoomTreeMap(roomId)
-                .getRoomTreeMap();
+        Member[] members = new Member[NUM_USERS + 1];
 
-        System.out.println(treeMap);
-
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
-                member1);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
-                member2);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
-                member3);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(2), LocalTime.of(0, 0, 0),
-                member2);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0),
-                member3);
-
-        System.out.println(treeMap);
-
-        List<TimeRangeWithMember> overlappingRanges = roomTreeMapService.findOverlappingTimeRanges(
-                roomId);
-
-        for (TimeRangeWithMember t : overlappingRanges) {
-            System.out.println(t.date + " | " + t.start + "~" + t.end);
-            System.out.print("참가자 : ");
-            for (Member m : t.getParticipationMembers()) {
-                System.out.print(m.getName() + " ");
-            }
-            System.out.println();
-            System.out.print("불참자 : ");
-            for (Member m : t.getNonParticipationMembers()) {
-                System.out.print(m.getName() + " ");
-            }
-            System.out.println();
+        for (int i = 1; i < NUM_USERS + 1; i++) {
+            members[i] = memberRepository.findById(Long.valueOf(i)).orElse(new Member());
+            System.out.println(members[i]);
         }
 
-        roomTreeMapService.delete(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
+        for (int i = 0; i < 1; i++) {
+            ExecutorService executorService = Executors.newFixedThreadPool(NUM_USERS);
 
-        List<TimeRangeWithMember> overlappingRanges2 = roomTreeMapService.findOverlappingTimeRanges(
-                roomId);
+            Runnable userTask = () -> {
+                long userId = Thread.currentThread().getId() - '0' + 1;
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(0, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(1, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(2, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(3, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(4, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(5, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(6, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(7, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(8, 0, 0), members[(int) userId]);
+                calculatorService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
+                        LocalTime.of(9, 0, 0), members[(int) userId]);
+            };
+            for (int j = 0; j < NUM_USERS; j++) {
+                executorService.submit(userTask);
+            }
+            executorService.shutdown();
 
-        for (TimeRangeWithMember t : overlappingRanges2) {
+            try {
+                executorService.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            List<TimeRangeWithMember> overlappingRanges = calculatorService.findOverlappingTimeRanges(
+                    ROOM_ID);
+            for (int j = 0; j < 10; j++) {
+                TimeRangeWithMember tm = overlappingRanges.get(j);
+                int finalJ = j;
+                assertAll(
+                        () -> assertThat(tm.getDate()).isEqualTo(LocalDate.now().plusDays(6)),
+                        () -> assertThat(tm.getStart()).isEqualTo(LocalTime.of(finalJ, 0)),
+                        () -> assertThat(tm.getEnd()).isEqualTo(LocalTime.of(finalJ + 3, 0)),
+                        () -> assertThat(tm.getParticipationMembers()).isEqualTo(
+                                List.of(member1, member2, member3))
+                );
+            }
+        }
+
+        List<TimeRangeWithMember> overlappingRanges = calculatorService.findOverlappingTimeRanges(
+                ROOM_ID);
+
+        for (TimeRangeWithMember t : overlappingRanges) {
             System.out.println(t.date + " | " + t.start + "~" + t.end);
             System.out.print("참가자 : ");
             for (Member m : t.getParticipationMembers()) {

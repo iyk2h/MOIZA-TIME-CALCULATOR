@@ -32,7 +32,7 @@ public class SelectedTimeService {
 
     private final EnterRoomRepository enterRoomRepository;
 
-    private final RoomTreeMapService roomTreeMapService;
+    private final CalculatorService calculatorService;
 
     private static final int MEMBER_MAX_SIZE = 10;
     private static final int MIN_PARTICIPATION_MEMBER = 1;
@@ -67,7 +67,7 @@ public class SelectedTimeService {
                 .plusMinutes(meetingDuration.getMinute());
 
         while (!curTime.isAfter(endTime)) {
-            roomTreeMapService.setRoomTreeMap(enterRoom.getRoom().getId(), day, startTime,
+            calculatorService.setDateTimeToMembers(enterRoom.getRoom().getId(), day, startTime,
                     enterRoom.getMember());
             curTime = curTime.plusMinutes(30);
             startTime = startTime.plusMinutes(30);
@@ -75,7 +75,7 @@ public class SelectedTimeService {
     }
 
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Room room) {
-        return roomTreeMapService.findOverlappingTimeRanges(room.getId());
+        return calculatorService.findOverlappingTimeRanges(room.getId());
     }
 
     @CacheEvict(value = "overlappingTimeRangesCache", key = "#room.id")

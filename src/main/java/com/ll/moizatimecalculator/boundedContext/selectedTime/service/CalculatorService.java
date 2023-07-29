@@ -4,7 +4,7 @@ import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import com.ll.moizatimecalculator.boundedContext.room.entity.Room;
 import com.ll.moizatimecalculator.boundedContext.room.repository.EnterRoomRepository;
 import com.ll.moizatimecalculator.boundedContext.room.service.RoomService;
-import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.RoomTreeMap;
+import com.ll.moizatimecalculator.boundedContext.selectedTime.entity.DateTimeToMembers;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RoomTreeMapService {
+public class CalculatorService {
 
     @Autowired
     RoomService roomService;
@@ -26,33 +26,33 @@ public class RoomTreeMapService {
     @Autowired
     EnterRoomRepository enterRoomRepository;
 
-    private final Map<Long, RoomTreeMap> roomDataMap = new ConcurrentHashMap<>();
+    private final Map<Long, DateTimeToMembers> dateTimeToMembersStorage = new ConcurrentHashMap<>();
 
-    public RoomTreeMap getRoomTreeMap(Long roomId) {
-        return roomDataMap.computeIfAbsent(roomId, key -> new RoomTreeMap());
+    public DateTimeToMembers getDateTimeToMembers(Long roomId) {
+        return dateTimeToMembersStorage.computeIfAbsent(roomId, key -> new DateTimeToMembers());
     }
 
-    public void setRoomTreeMap(Long roomId, LocalDate localDate, LocalTime localTime,
+    public void setDateTimeToMembers(Long roomId, LocalDate localDate, LocalTime localTime,
             Member member) {
         LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
 
-        RoomTreeMap roomTreeMap = getRoomTreeMap(roomId);
-        roomTreeMap.setRoomTreeMapDateWithMember(localDateTime, member);
+        DateTimeToMembers dateTimeToMembers = getDateTimeToMembers(roomId);
+        dateTimeToMembers.setDateTimeToMembers(localDateTime, member);
     }
 
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Long roomId) {
-        RoomTreeMap roomTreeMap = getRoomTreeMap(roomId);
+        DateTimeToMembers dateTimeToMembers = getDateTimeToMembers(roomId);
 
-        List<Entry<LocalDateTime, Set<Member>>> entries = getSortedEntries(roomTreeMap);
+        List<Entry<LocalDateTime, Set<Member>>> entries = getSortedEntries(dateTimeToMembers);
 
         return getFindTOP10(roomId, entries);
     }
 
-    public void delete(Long roomId, LocalDate localDate, LocalTime localTime,
+    public void deleteDateTimeToMembers(Long roomId, LocalDate localDate, LocalTime localTime,
             Member member) {
-        RoomTreeMap roomTreeMap = getRoomTreeMap(roomId);
+        DateTimeToMembers dateTimeToMembers = getDateTimeToMembers(roomId);
         LocalDateTime localDateTime = LocalDateTime.of(localDate, localTime);
-        roomTreeMap.deleteTreeMap(localDateTime, member);
+        dateTimeToMembers.deleteDateTimeToMembers(localDateTime, member);
     }
 
     private List<TimeRangeWithMember> getFindTOP10(Long roomId,
@@ -78,9 +78,10 @@ public class RoomTreeMapService {
         return list;
     }
 
-    private List<Entry<LocalDateTime, Set<Member>>> getSortedEntries(RoomTreeMap roomTreeMap) {
+    private List<Entry<LocalDateTime, Set<Member>>> getSortedEntries(
+            DateTimeToMembers dateTimeToMembers) {
         List<Entry<LocalDateTime, Set<Member>>> entries = new ArrayList<>(
-                roomTreeMap.getRoomTreeMap().entrySet());
+                dateTimeToMembers.getDateTimeToMembers().entrySet());
 
         entries.sort((o1, o2) -> {
             if (o1.getValue().size() == o2.getValue().size()) {

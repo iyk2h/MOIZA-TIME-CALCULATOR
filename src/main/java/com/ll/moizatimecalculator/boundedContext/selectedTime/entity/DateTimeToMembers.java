@@ -2,28 +2,29 @@ package com.ll.moizatimecalculator.boundedContext.selectedTime.entity;
 
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-public class RoomTreeMap {
+public class DateTimeToMembers {
 
-    private final ConcurrentHashMap<LocalDateTime, Set<Member>> roomTreeMap = new ConcurrentHashMap<>();
+    private final Map<LocalDateTime, Set<Member>> dateTimeToMembers = new ConcurrentHashMap<>();
 
-    public ConcurrentHashMap<LocalDateTime, Set<Member>> getRoomTreeMap() {
-        return roomTreeMap;
+    public Map<LocalDateTime, Set<Member>> getDateTimeToMembers() {
+        return dateTimeToMembers;
     }
 
-    public synchronized void setRoomTreeMapDateWithMember(LocalDateTime localDateTime, Member member) {
-        roomTreeMap.computeIfAbsent(localDateTime, key -> new ConcurrentSkipListSet<>()).add(member);
+    public synchronized void setDateTimeToMembers(LocalDateTime localDateTime, Member member) {
+        dateTimeToMembers.computeIfAbsent(localDateTime, key -> new ConcurrentSkipListSet<>()).add(member);
     }
 
-    public synchronized void deleteTreeMap(LocalDateTime localDateTime, Member member) {
-        Set<Member> members = roomTreeMap.get(localDateTime);
+    public synchronized void deleteDateTimeToMembers(LocalDateTime localDateTime, Member member) {
+        Set<Member> members = dateTimeToMembers.get(localDateTime);
         if (members != null) {
             members.remove(member);
             if (members.isEmpty()) {
-                roomTreeMap.remove(localDateTime);
+                dateTimeToMembers.remove(localDateTime);
             }
         }
     }
