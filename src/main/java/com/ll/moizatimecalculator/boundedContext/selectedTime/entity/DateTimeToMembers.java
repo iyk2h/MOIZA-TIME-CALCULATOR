@@ -2,13 +2,14 @@ package com.ll.moizatimecalculator.boundedContext.selectedTime.entity;
 
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
 
 public class DateTimeToMembers {
 
@@ -34,15 +35,11 @@ public class DateTimeToMembers {
     }
 
     public List<Entry<LocalDateTime, Set<Member>>> getSortedEntries() {
-        List<Entry<LocalDateTime, Set<Member>>> entries = new ArrayList<>(
-                dateTimeToMembers.entrySet());
-
-        entries.sort((o1, o2) -> {
-            int sizeComparison = Integer.compare(o2.getValue().size(), o1.getValue().size());
-            return (sizeComparison != 0) ? sizeComparison : o1.getKey().compareTo(o2.getKey());
-        });
-
-        return entries;
+        return dateTimeToMembers.entrySet().stream()
+                .sorted(Comparator.<Entry<LocalDateTime, Set<Member>>>comparingInt(entry -> entry.getValue().size())
+                        .reversed()
+                        .thenComparing(Entry::getKey))
+                .collect(Collectors.toList());
     }
 }
 
