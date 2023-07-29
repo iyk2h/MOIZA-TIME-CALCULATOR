@@ -26,10 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 @EnableCaching
 @ActiveProfiles("test")
 @Transactional
-class CalculatorServiceTest {
+class DateTimeToMembersServiceTest {
 
     @Autowired
-    CalculatorService calculatorService;
+    DateTimeToMembersService dateTimeToMembersService;
     @Autowired
     RoomRepository roomRepository;
     @Autowired
@@ -49,25 +49,25 @@ class CalculatorServiceTest {
 
         long roomId = room.getId();
 
-        Map<LocalDateTime, Set<Member>> treeMap = calculatorService.getDateTimeToMembers(roomId)
+        Map<LocalDateTime, Set<Member>> treeMap = dateTimeToMembersService.getDateTimeToMembers(roomId)
                 .getDateTimeToMembers();
 
         System.out.println(treeMap);
 
-        calculatorService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member1);
-        calculatorService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member2);
-        calculatorService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member3);
-        calculatorService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(2), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(2), LocalTime.of(0, 0, 0),
                 member2);
-        calculatorService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0),
                 member3);
 
         System.out.println(treeMap);
 
-        List<TimeRangeWithMember> overlappingRanges = calculatorService.findOverlappingTimeRanges(
+        List<TimeRangeWithMember> overlappingRanges = dateTimeToMembersService.getFindTOP10(
                 roomId);
 
         for (TimeRangeWithMember t : overlappingRanges) {
@@ -84,9 +84,9 @@ class CalculatorServiceTest {
             System.out.println();
         }
 
-        calculatorService.deleteDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
+        dateTimeToMembersService.deleteDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
 
-        List<TimeRangeWithMember> overlappingRanges2 = calculatorService.findOverlappingTimeRanges(
+        List<TimeRangeWithMember> overlappingRanges2 = dateTimeToMembersService.getFindTOP10(
                 roomId);
 
         for (TimeRangeWithMember t : overlappingRanges2) {

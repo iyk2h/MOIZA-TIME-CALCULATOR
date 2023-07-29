@@ -2,7 +2,10 @@ package com.ll.moizatimecalculator.boundedContext.selectedTime.entity;
 
 import com.ll.moizatimecalculator.boundedContext.member.entity.Member;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -16,7 +19,8 @@ public class DateTimeToMembers {
     }
 
     public synchronized void setDateTimeToMembers(LocalDateTime localDateTime, Member member) {
-        dateTimeToMembers.computeIfAbsent(localDateTime, key -> new ConcurrentSkipListSet<>()).add(member);
+        dateTimeToMembers.computeIfAbsent(localDateTime, key -> new ConcurrentSkipListSet<>())
+                .add(member);
     }
 
     public synchronized void deleteDateTimeToMembers(LocalDateTime localDateTime, Member member) {
@@ -27,6 +31,18 @@ public class DateTimeToMembers {
                 dateTimeToMembers.remove(localDateTime);
             }
         }
+    }
+
+    public List<Entry<LocalDateTime, Set<Member>>> getSortedEntries() {
+        List<Entry<LocalDateTime, Set<Member>>> entries = new ArrayList<>(
+                dateTimeToMembers.entrySet());
+
+        entries.sort((o1, o2) -> {
+            int sizeComparison = Integer.compare(o2.getValue().size(), o1.getValue().size());
+            return (sizeComparison != 0) ? sizeComparison : o1.getKey().compareTo(o2.getKey());
+        });
+
+        return entries;
     }
 }
 
