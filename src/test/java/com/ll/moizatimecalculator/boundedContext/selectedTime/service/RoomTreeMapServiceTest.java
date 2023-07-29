@@ -10,9 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,7 +49,7 @@ class RoomTreeMapServiceTest {
 
         long roomId = room.getId();
 
-        TreeMap<LocalDateTime, TreeSet<Member>> treeMap = roomTreeMapService.getRoomTreeMap(roomId)
+        ConcurrentHashMap<LocalDateTime, Set<Member>> treeMap = roomTreeMapService.getRoomTreeMap(roomId)
                 .getRoomTreeMap();
 
         System.out.println(treeMap);

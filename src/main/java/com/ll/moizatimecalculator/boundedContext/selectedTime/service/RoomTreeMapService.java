@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,7 +43,7 @@ public class RoomTreeMapService {
     public List<TimeRangeWithMember> findOverlappingTimeRanges(Long roomId) {
         RoomTreeMap roomTreeMap = getRoomTreeMap(roomId);
 
-        List<Entry<LocalDateTime, TreeSet<Member>>> entries = getSortedEntries(roomTreeMap);
+        List<Entry<LocalDateTime, Set<Member>>> entries = getSortedEntries(roomTreeMap);
 
         return getFindTOP10(roomId, entries);
     }
@@ -56,12 +56,12 @@ public class RoomTreeMapService {
     }
 
     private List<TimeRangeWithMember> getFindTOP10(Long roomId,
-            List<Entry<LocalDateTime, TreeSet<Member>>> entries) {
+            List<Entry<LocalDateTime, Set<Member>>> entries) {
         List<TimeRangeWithMember> list = new ArrayList<>();
         Room room = roomService.getRoom(roomId);
         List<Member> members = enterRoomRepository.findMembersByRoom(room);
 
-        for (Entry<LocalDateTime, TreeSet<Member>> entry : entries) {
+        for (Entry<LocalDateTime, Set<Member>> entry : entries) {
             List<Member> contain = new ArrayList<>(entry.getValue());
             List<Member> noContain = geNoCinTaiontMembers(members, contain);
 
@@ -78,8 +78,8 @@ public class RoomTreeMapService {
         return list;
     }
 
-    private List<Entry<LocalDateTime, TreeSet<Member>>> getSortedEntries(RoomTreeMap roomTreeMap) {
-        List<Entry<LocalDateTime, TreeSet<Member>>> entries = new ArrayList<>(
+    private List<Entry<LocalDateTime, Set<Member>>> getSortedEntries(RoomTreeMap roomTreeMap) {
+        List<Entry<LocalDateTime, Set<Member>>> entries = new ArrayList<>(
                 roomTreeMap.getRoomTreeMap().entrySet());
 
         entries.sort((o1, o2) -> {
