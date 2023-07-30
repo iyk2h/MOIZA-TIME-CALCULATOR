@@ -233,15 +233,12 @@ getFindTOP10(상위 10개)
 ---
 
 ## ⚙️개발 환경 및 기술 스택
-Back-end
 
 Java 17
 
 Spring Boot 3.1.0
 
 Spring Data JPA, MySQL
-
-Test
 
 Junit5
 
