@@ -26,11 +26,10 @@ CalculatorService는 dateTimeToMembers에 값을 입력, 삭제, 수정을 하�
 Map<LocalDateTime, Set<Member>> dateTimeToMembers = new ConcurrentHashMap<>();
 ```
 
-getDateTimeToMembers, setDateTimeToMembers, deleteDateTimeToMembers, getFindTOP10
+<details>
+<summary> getDateTimeToMembers 코드 및 설명 보기</summary>
 
-
-
-### getDateTimeToMembers()
+### getDateTimeToMembers
 
 ConcurrentHashMap의 computeIfAbsent 메서드를 사용해 동시 다중 스레드 환경에서 사용하도록 설계되었으며 한 번에 하나의 스레드만 특정 키의 값을 계산하도록 합니다.
 
@@ -41,7 +40,10 @@ public DateTimeToMembers getDateTimeToMembers(Long roomId) {
 }
 ```
 
+</details>
 
+<details>
+<summary> setDateTimeToMembers 코드 및 설명 보기</summary>
 
 ### setDateTimeToMembers
 
@@ -72,9 +74,10 @@ public synchronized void setDateTimeToMembersDateWithMember(LocalDateTime localD
 //ConcurrentSkipListSet을 사용해 Member 중복 및 오름차순 정렬 적용 및 Thread-Safe합니다.
 ```
 
+</details>
 
-
----
+<details>
+<summary> deleteDateTimeToMembers 코드 및 설명 보기</summary>
 
 ### deleteDateTimeToMembers
 
@@ -107,9 +110,10 @@ public synchronized void deleteDateTimeToMembers(LocalDateTime localDateTime, Me
 }
 ```
 
+</details>
 
-
----
+<details>
+<summary> getFindTOP10 코드 및 설명 보기</summary>
 
 ### getFindTOP10
 
@@ -170,6 +174,63 @@ public List<Entry<LocalDateTime, Set<Member>>> getSortedEntries() {
     return entries;
 }
 ```
+
+</details>
+
+---
+
+### 데이터 흐름 예시
+Room1에 user1, user2 및 user3이 서로 다른 회의 시간으로 예약되어 있는 예제 시나리오에 대해 dateTimeToMembers 및 dateTimeToMembersStorage에 저장된 데이터를 표시하는 테이블.
+
+dateTimeToMembers 데이터
+
+| Local Date Time         | Members          |
+|-------------------------|------------------|
+| 2023-07-30 10:00:00     | user1            |
+| 2023-07-30 14:30:00     | user2, user3     |
+| 2023-07-31 09:00:00     | user1, user2     |
+| 2023-07-31 15:00:00     | user3            |
+| ...                     | ...              |
+
+
+이 표에서 각 행은 특정 'LocalDateTime' 및 해당 시간에 모임이 가능한 '모임원'을 나타냅니다.
+예를 들어 2023-07-30 10:00:00에 user1은 모임 참석이 가능합니다.
+'2023-07-30' 같은 날짜 '14:30:00'에 'user2'와 'user3' 모두 모임 참석이 가능합니다.
+마찬가지로 2023-07-31 09:00:00에는 user1과 user2가 모임이 예정되어 있고 15:00:00에는 user3이 모임이 예정되어 있습니다.
+
+
+dateTimeToMembersStorage 데이터
+
+| Room Id       | DateTimeToMembers       |
+|---------------|-------------------------|
+| Room1         | (Data from Table 1)     |
+| Room2         | (Data for Room2, if any)|
+| ...           | ...                     |
+
+
+이 표에서 각 행은 특정 'RoomId(모임)'와 해당 방의 'DateTimeToMembers'에 저장된 해당 데이터를 나타냅니다.
+예를 들어 Room1의 경우 DateTimeToMembers에 저장된 데이터는 표 1과 동일합니다.
+
+
+getFindTOP10(상위 10개)
+
+| Rank | Local Date Time         | Members          |
+|------|-------------------------|------------------|
+| 1    | 2023-07-30 14:30:00     | user2, user3     |
+| 2    | 2023-07-31 09:00:00     | user1, user2     |
+| 3    | 2023-07-30 10:00:00     | user1            |
+| 4    | 2023-07-31 15:00:00     | user3            |
+| ...  | ...                     | ...              |
+
+
+이 표에서 모임 시간은 각 시간에 예정된 모임원 수를 기준으로 내림차순으로 정렬됩니다. 만약, 모임원 수가 같다면 Local Date Time 오름차순
+'Rank' 열은 정렬된 목록에서 모임 시간의 순위를 ​​나타냅니다.
+'Local Date Time' 열은 각 모임의 특정 날짜와 시간을 보여줍니다.
+'모임원' 열에는 해당 모임 시간에 예약된 사용자의 이름이 표시됩니다.
+
+표의 실제 데이터는 각 모임 시간에 예정된 회원 수와 애플리케이션의 특정 구현에 따라 다를 수 있습니다. 위의 표는 더 나은 이해를 위해 가상의 예를 제공합니다.
+
+---
 
 ## ⚙️개발 환경 및 기술 스택
 Back-end
