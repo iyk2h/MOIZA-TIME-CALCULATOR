@@ -28,10 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-public class RoomTreeMapServiceThreadTest {
+public class DateTimeToMembersServiceThreadTest {
 
     @Autowired
-    RoomTreeMapService roomTreeMapService;
+    DateTimeToMembersService dateTimeToMembersService;
     @Autowired
     RoomRepository roomRepository;
     @Autowired
@@ -63,26 +63,26 @@ public class RoomTreeMapServiceThreadTest {
             ExecutorService executorService = Executors.newFixedThreadPool(NUM_USERS);
 
             Runnable userTask = () -> {
-                long userId = Thread.currentThread().getId() - '0' + 1;
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                long userId = getAndIncrementUserId();
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(0, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(1, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(2, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(3, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(4, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(5, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(6, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(7, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(8, 0, 0), members[(int) userId]);
-                roomTreeMapService.setRoomTreeMap(ROOM_ID, LocalDate.now().plusDays(6),
+                dateTimeToMembersService.setDateTimeToMembers(ROOM_ID, LocalDate.now().plusDays(6),
                         LocalTime.of(9, 0, 0), members[(int) userId]);
             };
             for (int j = 0; j < NUM_USERS; j++) {
@@ -96,7 +96,7 @@ public class RoomTreeMapServiceThreadTest {
                 e.printStackTrace();
             }
 
-            List<TimeRangeWithMember> overlappingRanges = roomTreeMapService.findOverlappingTimeRanges(
+            List<TimeRangeWithMember> overlappingRanges = dateTimeToMembersService.getFindTOP10(
                     ROOM_ID);
             for (int j = 0; j < 10; j++) {
                 TimeRangeWithMember tm = overlappingRanges.get(j);
@@ -111,7 +111,7 @@ public class RoomTreeMapServiceThreadTest {
             }
         }
 
-        List<TimeRangeWithMember> overlappingRanges = roomTreeMapService.findOverlappingTimeRanges(
+        List<TimeRangeWithMember> overlappingRanges = dateTimeToMembersService.getFindTOP10(
                 ROOM_ID);
 
         for (TimeRangeWithMember t : overlappingRanges) {
@@ -127,6 +127,11 @@ public class RoomTreeMapServiceThreadTest {
             }
             System.out.println();
         }
+    }
+
+    int userIdCounter = 0;
+    private synchronized long getAndIncrementUserId() {
+        return ++userIdCounter;
     }
 
     @BeforeEach

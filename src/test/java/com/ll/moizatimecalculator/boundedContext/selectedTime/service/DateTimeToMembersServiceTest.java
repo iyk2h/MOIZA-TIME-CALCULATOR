@@ -10,8 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,10 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 @EnableCaching
 @ActiveProfiles("test")
 @Transactional
-class RoomTreeMapServiceTest {
+class DateTimeToMembersServiceTest {
 
     @Autowired
-    RoomTreeMapService roomTreeMapService;
+    DateTimeToMembersService dateTimeToMembersService;
     @Autowired
     RoomRepository roomRepository;
     @Autowired
@@ -49,25 +49,25 @@ class RoomTreeMapServiceTest {
 
         long roomId = room.getId();
 
-        TreeMap<LocalDateTime, TreeSet<Member>> treeMap = roomTreeMapService.getRoomTreeMap(roomId)
-                .getRoomTreeMap();
+        Map<LocalDateTime, Set<Member>> treeMap = dateTimeToMembersService.getDateTimeToMembers(roomId)
+                .getDateTimeToMembers();
 
         System.out.println(treeMap);
 
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member1);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member2);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(3), LocalTime.of(0, 0, 0),
                 member3);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(2), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(2), LocalTime.of(0, 0, 0),
                 member2);
-        roomTreeMapService.setRoomTreeMap(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0),
+        dateTimeToMembersService.setDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0),
                 member3);
 
         System.out.println(treeMap);
 
-        List<TimeRangeWithMember> overlappingRanges = roomTreeMapService.findOverlappingTimeRanges(
+        List<TimeRangeWithMember> overlappingRanges = dateTimeToMembersService.getFindTOP10(
                 roomId);
 
         for (TimeRangeWithMember t : overlappingRanges) {
@@ -84,9 +84,9 @@ class RoomTreeMapServiceTest {
             System.out.println();
         }
 
-        roomTreeMapService.delete(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
+        dateTimeToMembersService.deleteDateTimeToMembers(roomId, LocalDate.now().plusDays(1), LocalTime.of(0, 0, 0), member3);
 
-        List<TimeRangeWithMember> overlappingRanges2 = roomTreeMapService.findOverlappingTimeRanges(
+        List<TimeRangeWithMember> overlappingRanges2 = dateTimeToMembersService.getFindTOP10(
                 roomId);
 
         for (TimeRangeWithMember t : overlappingRanges2) {
