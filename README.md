@@ -19,9 +19,10 @@
 
 ---
 
-### DateTimeToMembersService의 주요기능 4가지
+### [DateTimeToMembersService](./src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/service/DateTimeToMembersService.java)의 주요기능 4가지
 CalculatorService는 dateTimeToMembers에 값을 입력, 삭제, 수정을 하고, 최대로 겹치는 시간대를 계산합니다.
 
+[dateTimeToMembers](./src/main/java/com/ll/moizatimecalculator/boundedContext/selectedTime/entity/DateTimeToMembers.java)
 ```java
 Map<LocalDateTime, Set<Member>> dateTimeToMembers = new ConcurrentHashMap<>();
 ```
