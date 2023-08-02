@@ -19,12 +19,12 @@ public class DateTimeToMembers {
         return dateTimeToMembers;
     }
 
-    public synchronized void setDateTimeToMembers(LocalDateTime localDateTime, Member member) {
+    public void setDateTimeToMembers(LocalDateTime localDateTime, Member member) {
         dateTimeToMembers.computeIfAbsent(localDateTime, key -> new ConcurrentSkipListSet<>())
                 .add(member);
     }
 
-    public synchronized void deleteDateTimeToMembers(LocalDateTime localDateTime, Member member) {
+    public void deleteDateTimeToMembers(LocalDateTime localDateTime, Member member) {
         Set<Member> members = dateTimeToMembers.get(localDateTime);
         if (members != null) {
             members.remove(member);
